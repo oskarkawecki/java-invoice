@@ -15,7 +15,7 @@ public abstract class Product {
 		}
 
 		if (name == null || price.signum() == -1) {
-			throw new IllegalArgumentException("You cannot create products with null or empty name");
+			throw new IllegalArgumentException("You cannot create products with null or negative price");
 		}
 
 		this.name = name;
