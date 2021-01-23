@@ -14,6 +14,9 @@ public class Invoice {
     }
 
     public void addProduct(Product product, Integer quantity) {
+		if (quantity < 1) {
+			throw new IllegalArgumentException("quantity cannot be less than 1");
+		}
 		this.products.put(product, quantity);
     }
 
@@ -40,3 +43,5 @@ public class Invoice {
 
 	}
 }
+
+// all tests passed
