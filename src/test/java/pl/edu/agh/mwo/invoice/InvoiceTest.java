@@ -7,7 +7,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.edu.agh.mwo.invoice.product.BottleOfWine;
 import pl.edu.agh.mwo.invoice.product.DairyProduct;
+import pl.edu.agh.mwo.invoice.product.FuelCanister;
 import pl.edu.agh.mwo.invoice.product.OtherProduct;
 import pl.edu.agh.mwo.invoice.product.Product;
 import pl.edu.agh.mwo.invoice.product.TaxFreeProduct;
@@ -120,5 +122,75 @@ public class InvoiceTest {
 	@Test
 	public void testTheSameInvoicesHasTheSameNumber() {
 		Assert.assertEquals(invoice.getNumber(), invoice.getNumber());
+	}
+
+	@Test
+	public void testInvoiceAsTextIsCorrect() {
+
+		final String productOneName = "Owoce";
+		final BigDecimal productOnePrice = new BigDecimal("200").setScale(2);
+
+		final String productTwoName = "Maslanka";
+		final BigDecimal productTwoPrice = new BigDecimal("200").setScale(2);
+		final Integer productTwoQuantity = 3;
+
+		final String productThreeName = "Wino";
+		final BigDecimal productThreePrice = new BigDecimal("343.24").setScale(2);
+		final Integer productThreeQuantity = 100;
+
+		final String expectedSecondLine = productOneName + "," + productOnePrice + ",1";
+		final String expectedThirdLine = productTwoName + "," + productTwoPrice + "," + productTwoQuantity;
+		final String expectedFourthLine = productThreeName + "," + productThreePrice + "," + productThreeQuantity;
+
+		invoice.addProduct(new TaxFreeProduct(productOneName, productOnePrice));
+		invoice.addProduct(new DairyProduct(productTwoName, productTwoPrice), productTwoQuantity);
+		invoice.addProduct(new OtherProduct(productThreeName, productThreePrice), productThreeQuantity);
+
+		String invoiceAsText = invoice.getInvoiceAsText();
+		String[] lines = invoiceAsText.split("\n");
+		Assert.assertEquals(invoice.getNumber(), Integer.parseInt(lines[0]));
+		Assert.assertEquals(expectedSecondLine, lines[1]);
+		Assert.assertEquals(expectedThirdLine, lines[2]);
+		Assert.assertEquals(expectedFourthLine, lines[3]);
+		Assert.assertEquals("Liczba pozycji: " + 3, lines[lines.length - 1]);
+	}
+
+	@Test
+	public void testProductIsNotDuplicated() {
+
+		final String productOneName = "Owoce";
+		final BigDecimal productOnePrice = new BigDecimal("200");
+
+		final String productTwoName = "Owoce";
+		final BigDecimal productTwoPrice = new BigDecimal("200");
+		final Integer productTwoQuantity = 100;
+
+		invoice.addProduct(new TaxFreeProduct(productOneName, productOnePrice));
+		invoice.addProduct(new TaxFreeProduct(productTwoName, productTwoPrice), productTwoQuantity);
+
+		String expectedInvoiceAsText = invoice.getNumber() + "\nOwoce,200.00,101\nLiczba pozycji: 1";
+		Assert.assertEquals(expectedInvoiceAsText, invoice.getInvoiceAsText());
+	}
+
+	@Test
+	public void testExciseIsAdded() {
+
+		final String productOneName = "Wino";
+		final BigDecimal productOnePrice = new BigDecimal("200");
+
+		final String productTwoName = "Kanister paliwa";
+		final BigDecimal productTwoPrice = new BigDecimal("100");
+		final Integer productTwoQuantity = 100;
+
+		invoice.addProduct(new BottleOfWine(productOneName, productOnePrice));
+		invoice.addProduct(new FuelCanister(productTwoName, productTwoPrice), productTwoQuantity);
+
+		final BigDecimal expectedProductOnePrice = new BigDecimal("205.56").setScale(2);
+		final BigDecimal expectedProductTwoPrice = new BigDecimal("105.56").setScale(2);
+
+		String expectedInvoiceAsText = invoice.getNumber()
+				+ "\nWino," + expectedProductOnePrice + ",1\nKanister paliwa," + expectedProductTwoPrice
+				+ ",100\nLiczba pozycji: 2";
+		Assert.assertEquals(expectedInvoiceAsText, invoice.getInvoiceAsText());
 	}
 }
